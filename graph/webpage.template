@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>MemReaper Report</title>
+                <link rel="stylesheet" href="rsc/morris.css">
+                <script src="rsc/jquery.min.js"></script>
+                <script src="rsc/raphael-min.js"></script>
+                <script src="rsc/morris.min.js"></script>
+        </head>
+<body>
+
+<img style="position:relative; float:left; left:0; top:0; width:20%;" src="rsc/grim-reaper.png"/>
+<h2 style="padding:5px; background-color:#325f80; color:#fff; position:relative; float:left; width:78%; font: 20px sans-serif; font-weight:bold;">
+    <a style="color:#fff; decoration:none;" href="index.html">MemReaper Report - [/*exename*/]</a></h2>
+<div style="position:relative; float:left; margin:auto; height: 250px; width:60%; ">
+        <div id="totalmem" style="float: left; height: 250px; width:50%; "></div>
+        <div id="allocmem" style="float: left; height: 250px; width:50%; "></div>
+        <div id="runtime" style="float:left; width:100%; font: 14px sans-serif; font-weight:bold;">[/*runtime*/]</div>
+        <div id="linegraph" style="float:left; height: 250px; width:100%"></div>
+        <div id="info" style="float:left; width:100%; font: 14px sans-serif; font-weight:bold;"></div>
+        <div id="bargraph" style="float:left; height: 250px; width:100%"></div>
+        <div id="callstack" style="float:left; width:100%; font: 12px sans-serif">
+            <div id="addrs" style="float:left; width:100%; font: 12px sans-serif; font-weight:bold;"></div>
+            <div id="stack" style="float:left; width:100%; font: 12px sans-serif;"></div>
+        </div>
+</div>
+
+<script>
+var totalsdonut = new Morris.Donut({
+  element: 'totalmem',
+  data: [
+//    { label: "[/*mem app name*/]", value: [/*mem app*/] },
+    { label: "Used", value: [/*mem used*/] },
+    { label: "Free", value: [/*mem free*/] },
+        ],
+        formatter: function (y, data) { return y + '%' }
+});
+for(i = 0; i < totalsdonut.segments.length; i++) {
+  totalsdonut.segments[i].handlers['hover'].push(function(i){
+  });
+}
+
+
+var selectedpiebytes = -1;
+var allocdonut = new Morris.Donut({
+  element: 'allocmem',
+  data:[
+          { label: "Allocs", value: 100 }
+    ],
+    formatter: function (y, data) { return ' x ' + y }
+}).on('click', function (i, row) {
+    selectedpiebytes = allocdonut.data[i].bytes;
+    $("#bargraph").show();
+    $("#callstack").show();
+    setBarGraphData(allocdonut.data[i].piekey, allocdonut.data[i].bytes, allocdonut.data[i].value);
+});
+for(i = 0; i < allocdonut.segments.length; i++) {
+  allocdonut.segments[i].handlers['hover'].push(function(i){
+  });
+}
+
+var memtimeline = new Morris.Line({
+  element: 'linegraph',
+  stacked: true,
+  data: [
+    [/*memtimeline*/]
+  ],
+  parseTime: false,
+  smooth: false,
+  xkey: 'second',
+  xLabels: 'second',
+  ykeys: ['memory'],
+  labels: ['Bytes'],
+  hoverCallback: function (index, options, content, row) {
+    var second = this.data[index].second;
+    setPieData(second);
+    return parseInt(row.memory).toLocaleString() + " KB<br/>" + parseInt(row.second).toLocaleString() + " second";
+  }
+});
+
+var bargraph = new Morris.Bar({
+  element: 'bargraph',
+  stacked: true,
+  data: [
+  ],
+  // The name of the data record attribute that contains x-values.
+  xkey: 'millisecond',
+  // A list of names of data record attributes that contain y-values.
+  ykeys: ['bytes'],
+  // Labels for the ykeys -- will be displayed when you hover over the
+  // chart.
+  labels: ['Bytes'],
+  hoverCallback: function (index, options, content, row) {
+      var callstack = this.data[index].callstack;
+      callstack = callstack.replace(/stack/g, '<br/><br/>stack');
+      $("#stack").html(callstack);
+      if(this.data[index]) {
+        $("#addrs").html(this.data[index].memaddrs);
+      }
+  }
+});
+
+var barGraphData = [
+    [/*bargraphdata*/]
+];
+var pieData = [
+    [/*piedata*/]
+];
+var totalsData = [
+    [/*totalsdata*/]
+];
+
+function setAllocDonutData(second) {
+    if(pieData && pieData.length > 0) {
+        var pieidx = 0;
+        $.each( pieData, function( key, value ) {
+                if(parseInt(value.second) >= parseInt(second)) {
+                        allocdonut.setData(value.data);
+                        var pieidx = 0;
+                        $.each( value.data, function( piekey, piedata ) {
+                            if(selectedpiebytes == piedata.bytes ) {
+                                allocdonut.select(pieidx);
+                            }
+                            pieidx++;
+                        });
+                        return false;
+                }
+                pieidx++;
+        });
+    }
+}
+function setTotalsDonutData(second) {
+    if(totalsData && totalsData.length > 0) {
+        $.each( totalsData, function( key, value ) {
+                if(parseInt(value.second) >= parseInt(second)) {
+                        totalsdonut.setData(value.data);
+                        var pieidx = 0;
+                        $.each( value.data, function( piekey, piedata ) {
+                            if("Used" == piedata.label) {
+                                totalsdonut.select(pieidx);
+                            }
+                            pieidx++;
+                        });
+                        return false;
+                }
+        });
+    }
+}
+function setPieData(second) {
+    $(function (){
+        window.setTimeout(
+            function() {
+                setAllocDonutData(second);
+                setTotalsDonutData(second);
+            }
+            , 100
+        );
+    })
+}
+
+
+function setBarGraphData(piekey, bytes, times) {
+    bargraph.setData(barGraphData[piekey].data);
+    $("#info").html('Allocated '+bytes+' Bytes, '+times + ' times');
+}
+
+setPieData(0);
+
+</script>
+
+</body>
+</html>
+

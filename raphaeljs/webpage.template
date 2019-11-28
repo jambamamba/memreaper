@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>MemReaper Report</title>
+                <link rel="stylesheet" href="morris.css">
+                <script src="jquery.min.js"></script>
+                <script src="raphael-min.js"></script>
+                <script src="morris.min.js"></script>
+        </head>
+<body>
+
+<div style="margin:auto; height: 250px; width:50%; ">
+        <div id="totalmem" style="float: left; height: 250px; width:50%; "></div>
+        <div id="allocmem" style="float: left; height: 250px; width:50%; "></div>
+</div>
+<div id="bargraph" style="margin:auto; height: 250px; width:50%"></div>
+
+<script>
+
+new Morris.Donut({
+  element: 'totalmem',
+  data: [
+    { label: "Used", value: [/*mem used*/] },
+    { label: "Free", value: [/*mem free*/] },
+        ],
+        formatter: function (y, data) { return y + '%' }
+});
+new Morris.Donut({
+  element: 'allocmem',
+  data: [
+  [/*allocmem*/]
+        ],
+        formatter: function (y, data) { return ' x ' + y }
+}).on('click', function (i, row) {
+        setBarGraphData(row.key);
+});
+var bargraph = new Morris.Bar({
+  element: 'bargraph',
+  stacked: true,
+  data: [
+  ],
+  // The name of the data record attribute that contains x-values.
+  xkey: 'millisecond',
+  // A list of names of data record attributes that contain y-values.
+  ykeys: ['value'],
+  // Labels for the ykeys -- will be displayed when you hover over the
+  // chart.
+  labels: ['Value']
+});
+
+/*[bargraphdata*/]
+var barGraphData = {
+'key0':
+[
+    { millisecond: '93', value: 1 },
+    { millisecond: '93', value: 2 }
+],
+};
+
+function setBarGraphData() {
+        bargraph.setData([
+{ millisecond: '93', value: 1 },
+{ millisecond: '93', value: 2 }
+]
+        );
+}
+
+</script>
+
+</body>
+</html>
+
