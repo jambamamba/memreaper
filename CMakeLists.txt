@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 # Set project's name
 set(PROJECT "memreaper")
@@ -15,6 +15,8 @@ if (MSVC OR MSVC OR MSYS OR MINGW)
    add_definitions(-DWIN64 -D_WIN64 -DBOOST_USE_WINDOWS_H)
 endif()
 
+#set(MY_LINKER "/home/oosman/pi/x-tools/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-ld")
+set(MY_LINKER ${CMAKE_LINKER})
 #=========================================================================
 # Compilation step for static resources
 FUNCTION(ADD_RESOURCES out_var)
@@ -22,8 +24,9 @@ FUNCTION(ADD_RESOURCES out_var)
   FOREACH(in_f ${ARGN})
     FILE(RELATIVE_PATH src_f ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${in_f})
     SET(out_f "${PROJECT_BINARY_DIR}/${in_f}.o")
+    MESSAGE("Building GLSL object ${out_f}")
     ADD_CUSTOM_COMMAND(OUTPUT ${out_f}
-      COMMAND ${CMAKE_LINKER} -r -b binary -o ${out_f} ${src_f}
+      COMMAND ${MY_LINKER} -r -b binary -o ${out_f} ${src_f}
       DEPENDS ${in_f}
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
       COMMENT "Building GLSL object ${out_f}"

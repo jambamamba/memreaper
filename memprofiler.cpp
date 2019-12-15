@@ -8,6 +8,7 @@
 #include <fstream>
 #include <future>
 #include <iostream>
+#include <libgen.h>
 #include <malloc.h>
 #include <map>
 #include <mutex>
@@ -25,6 +26,7 @@
 #include <thread>
 #include <unistd.h>
 #include <vector>
+
 
 namespace  {
 //https://beesbuzz.biz/code/4399-Embedding-binary-resources-with-CMake-and-C-11
@@ -123,20 +125,17 @@ static inline std::string &rtrim(std::string &s) {
 
 static std::string exeName()
 {
-    char exe[256] = {0};
+    static char exe[4096] = {0};
+    if(exe[0]) {
+        return exe;
+    }
     int ret = readlink("/proc/self/exe", exe, sizeof(exe)-1);
     if(ret ==-1) {
         return "";
     }
-    size_t j = 0;
-    for(size_t i = strlen(exe) - 1;  i != 0 ; --i, ++j)
-    {
-        if(exe[i] == '/')
-        {
-            memcpy(exe, &exe[i+1], j);
-            exe[j]=0;
-        }
-    }
+    char *base = basename(exe);
+    memcpy(exe, base, strlen(base));
+    exe[strlen(base)] = 0;
     return exe;
 }
 static bool isDir(const char* path)
@@ -773,12 +772,12 @@ void MemProfiler::Dump()
     }
     file.close();
 
-    Resource jquery_min_js = LOAD_RESOURCE(x265_memreaper_graph_jquery_min_js);
-    Resource morris_css = LOAD_RESOURCE(x265_memreaper_graph_morris_css);
-    Resource morris_min_js = LOAD_RESOURCE(x265_memreaper_graph_morris_min_js);
-    Resource raphael_min_js = LOAD_RESOURCE(x265_memreaper_graph_raphael_min_js);
-    Resource grim_reaper_png = LOAD_RESOURCE(x265_memreaper_graph_grim_reaper_png);
-    Resource webpage_template = LOAD_RESOURCE(x265_memreaper_graph_webpage_template);
+    Resource jquery_min_js = LOAD_RESOURCE(graph_jquery_min_js);
+    Resource morris_css = LOAD_RESOURCE(graph_morris_css);
+    Resource morris_min_js = LOAD_RESOURCE(graph_morris_min_js);
+    Resource raphael_min_js = LOAD_RESOURCE(graph_raphael_min_js);
+    Resource grim_reaper_png = LOAD_RESOURCE(graph_grim_reaper_png);
+    Resource webpage_template = LOAD_RESOURCE(graph_webpage_template);
 
     std::string html = std::string(webpage_template.data(), webpage_template.size());
     size_t memtotal = std::stoull(memory("MemTotal"));//kb
